@@ -152,7 +152,7 @@ test('選ぶ操作の補助説明は通常の見出し直下に一度だけ表�
   await answer(page);
   await expect(page.locator('.instruction')).toHaveCount(0);
   await expect(page.getByText(/使ってみたい言葉を/)).toHaveCount(0);
-  const hint = page.getByText('気になる言葉があれば「選ぶ」を押してください。', {exact:true});
+  const hint = page.getByText('覚えたい言葉があれば「選ぶ」を押してください。（今日の一言に保存されます）', {exact:true});
   await expect(hint).toHaveCount(1);
   expect(await hint.evaluate(el => el.tagName)).toBe('P');
   expect(await hint.evaluate(el => el.previousElementSibling.textContent)).toBe('通常の言い換え');

@@ -173,13 +173,13 @@ test('候補の3見出しは文章見出しと同じサイズ・太さで、他�
   for (const width of [390,1440]) {
     await page.setViewportSize({width,height:844});
     const expected = await typography(page.getByRole('heading', {name:'あなたの言葉で文章にすると'}));
-    expect(expected).toEqual({size:'14px',weight:'600'});
+    expect(expected).toEqual({size:'16px',weight:'600'});
     for (const label of ['通常の言い換え','少し視点を変えた言い換え','もう少し発想を広げてみる？']) {
       expect(await typography(page.getByText(label, {exact:true}))).toEqual(expected);
     }
-    expect((await typography(page.locator('.selection-hint'))).size).toBe('12px');
-    expect((await typography(page.locator('.card-heading strong').first())).size).toBe('19px');
-    expect((await typography(page.locator('.description').first())).size).toBe('13px');
+    expect((await typography(page.locator('.selection-hint'))).size).toBe('13px');
+    expect((await typography(page.locator('.card-heading strong').first())).size).toBe('18px');
+    expect((await typography(page.locator('.description').first())).size).toBe('14px');
   }
 });
 

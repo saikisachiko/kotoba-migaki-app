@@ -111,7 +111,7 @@ test('入力の前後の空白も置換結果に保持する', async ({page}) =>
 
 test('AIコメントは表現カードの下にあり、カードには入力と置換文だけを表示', async ({page}) => {
   await answer(page, '検討させてください');
-  const comment = '『検討させてください』は、すぐに返答せず、内容を考える時間がほしいことを丁寧に伝える表現です。';
+  const comment = '『検討させてください』：すぐに返答せず、内容を考える時間がほしいことを丁寧に伝えたい、という表現にされましたね。では、他の言い回しも見てみましょう。';
   const own = page.locator('.own');
   await expect(own.locator('h2')).toHaveText('あなたの表現');
   await expect(own.locator('.own-word')).toHaveText('検討させてください');
@@ -260,7 +260,7 @@ for (const width of [320,390,1440]) {
 }
 
 test('入力に対応する短いフィードバックを安全に表示する', async ({page}) => {
-  for (const [input, part] of [['検討させてください','内容を考える時間'],['相談させてください','関係者と話し合って'],['確認したいです','状況や条件を確かめて'],['<img src=x onerror=alert(1)>','返答のニュアンスが変わります']]) {
+  for (const [input, part] of [['検討させてください','内容を考える時間'],['相談させてください','関係者と話し合って'],['確認したいです','状況や条件を確かめて'],['<img src=x onerror=alert(1)>','ご自身の言葉で返答を伝える']]) {
     await answer(page,input);
     const feedback = page.locator('.ai-feedback');
     await expect(feedback).toContainText(`『${input}』`);
@@ -286,4 +286,18 @@ test('仮保存メッセージとことば帳ボタンは両カードの下に�
   await expect(page.locator('.ai-feedback')).toHaveCount(0);
   await page.getByRole('button', {name:'今日は選ばない'}).click();
   await expect(page.locator('.notebook-summary')).toHaveCount(0);
+});
+
+test('フィードバックは入力を受け止める1文目と固定ガイドの2文目', async ({page}) => {
+  await answer(page,'確認させてください');
+  const feedback = page.locator('.ai-feedback p');
+  await expect(feedback).toHaveText('『確認させてください』：状況や条件を確かめてから返答したい、という表現にされましたね。では、他の言い回しも見てみましょう。');
+  await expect(feedback.locator('br')).toHaveCount(1);
+  expect(await feedback.evaluate(el=>el.innerText.split('\n'))).toEqual([
+    '『確認させてください』：状況や条件を確かめてから返答したい、という表現にされましたね。',
+    'では、他の言い回しも見てみましょう。',
+  ]);
+  await expect(page.locator('.sample-note')).toHaveText('AIコメント・候補はプロトタイプ用の固定サンプルです。');
+  await answer(page,'相談させてください');
+  await expect(page.locator('.ai-feedback p')).toContainText('では、他の言い回しも見てみましょう。');
 });

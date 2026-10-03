@@ -223,3 +223,38 @@ for (const index of [0,2,4]) {
     await expect(page.getByRole('heading', {name:/おしまい/})).toBeVisible();
   });
 }
+
+for (const width of [320,390,1440]) {
+  test(`${width}pxで一連の操作と追加候補・完了ボタンの余白を確認`, async ({page}) => {
+    await page.emulateMedia({reducedMotion:'reduce'});
+    await page.setViewportSize({width,height:844});
+    await page.goto('/');
+    await expect(page.getByRole('heading', {name:'今日の言葉磨き'})).toBeVisible();
+    await page.locator('input').fill('検討させてください');
+    await page.getByRole('button', {name:'この言葉にする'}).click();
+    const finish = page.getByRole('button', {name:'今日の一言にする'});
+    await expect(finish).toBeVisible();
+    await expect(finish).toBeDisabled();
+    const disclosure = await page.locator('#more').boundingBox();
+    const button = await finish.boundingBox();
+    expect(button.y - (disclosure.y + disclosure.height)).toBe(24);
+    await page.locator('[data-index="0"]').click();
+    await page.locator('[data-index="3"]').click();
+    await expect(page.locator('#selection-status')).toHaveText('「相談する」を選びました。');
+    await page.getByRole('button', {name:'こんな表現もあります'}).click();
+    await expect(page.locator('[data-index="4"]')).toBeVisible();
+    await page.mouse.move(0,0);
+    const styles = await page.locator('.candidate').evaluateAll(elements => elements.filter(el => el.getAttribute('aria-pressed') === 'false').map(el => {
+      const s = getComputedStyle(el);
+      return [s.padding,s.borderRadius,s.borderWidth,s.backgroundColor];
+    }));
+    expect(styles.every(style=>JSON.stringify(style) === JSON.stringify(styles[0]))).toBe(true);
+    await finish.click();
+    await expect(page.locator('.saved')).toContainText('一度社内で相談させてください');
+    await expect(page.locator('.own .sentence strong')).toHaveText('検討させてください');
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    const box = await page.locator('.notebook').boundingBox();
+    expect(box.width).toBeLessThanOrEqual(560);
+    expect(Math.abs(box.x - (width-box.width)/2)).toBeLessThan(1);
+  });
+}

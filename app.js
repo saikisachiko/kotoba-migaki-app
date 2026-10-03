@@ -48,7 +48,7 @@ function expand() {
   app.querySelector('#skip').onclick = () => { selected = null; move(done); };
 }
 function done() {
-  app.innerHTML = `<p class="step">03 / 今日のページを閉じる</p><h1 tabindex="-1">今日の言葉磨き、<br>おしまい 🌱</h1><section class="own"><h2>✏️ 自分の言葉</h2><p class="sentence">${answer ? ownSentence() : 'まだ自分の言葉が見つかっていません'}</p></section>${selected !== null ? `<section class="saved"><h2>🌱 今日の一言</h2><p class="sentence">${sentence(candidates[selected])}</p><p>ことば帳に追加しました。</p><p class="hint">プロトタイプの仮表示です。データは保存されません。</p><button class="secondary" id="notebook">ことば帳を見る</button><p id="notebook-message" role="status"></p></section>` : '<p class="quiet">今日は、表現を眺めるところまで。</p>'}<p class="farewell">お疲れさまでした。また明日！</p><button class="text-button" id="restart">もう一度試す</button>`;
+  app.innerHTML = `<p class="step">03 / 今日のページを閉じる</p><h1 tabindex="-1">今日のあなたの言葉磨き</h1><section class="own"><h2>✏️ 自分の言葉</h2><p class="sentence">${answer ? ownSentence() : 'まだ自分の言葉が見つかっていません'}</p></section>${selected !== null ? `<section class="saved"><h2>🌱 今日の一言</h2><p class="sentence">${sentence(candidates[selected])}</p><p>ことば帳に追加しました。</p><p class="hint">プロトタイプの仮表示です。データは保存されません。</p><button class="secondary" id="notebook">ことば帳を見る</button><p id="notebook-message" role="status"></p></section>` : '<p class="quiet">今日は、表現を眺めるところまで。</p>'}<p class="farewell">お疲れさまでした。また明日！</p><button class="text-button" id="restart">もう一度試す</button>`;
   app.querySelector('#notebook')?.addEventListener('click', () => { app.querySelector('#notebook-message').textContent = 'ことば帳は次の開発段階で実装します'; });
   app.querySelector('#restart').onclick = () => { answer = ''; move(start); };
 }

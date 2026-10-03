@@ -26,7 +26,7 @@ test('回答、追加候補の開閉、選択変更、今日の一言、こと�
   await page.locator('[data-index="4"]').click();
   await expect(page.locator('[data-index="0"]')).toHaveAttribute('aria-pressed','false');
   await page.getByRole('button', {name:'今日の一言にする'}).click();
-  await expect(page.getByRole('heading', {name:/おしまい/})).toBeVisible();
+  await expect(page.getByRole('heading', {name:'今日のあなたの言葉磨き', exact:true})).toBeVisible();
   await expect(page.locator('.saved')).toContainText('いったん持ち帰らせてください');
   await page.getByRole('button', {name:'ことば帳を見る'}).click();
   await expect(page.getByRole('status')).toHaveText('ことば帳は次の開発段階で実装します');
@@ -48,7 +48,7 @@ test('選択後でも今日は選ばないで完了する', async ({page}) => {
   await answer(page);
   await page.locator('[data-index="2"]').click();
   await page.getByRole('button', {name:'今日は選ばない'}).click();
-  await expect(page.getByRole('heading', {name:/おしまい/})).toBeVisible();
+  await expect(page.getByRole('heading', {name:'今日のあなたの言葉磨き', exact:true})).toBeVisible();
   await expect(page.getByRole('heading', {name:'🌱 今日の一言'})).toHaveCount(0);
   await expect(page.locator('.own')).toContainText('検討したいです');
 });
@@ -145,7 +145,7 @@ test('候補プールの全語彙を入力しても今日は選ばないで完�
   await answer(page, '検討 確認 精査 判断 調整 相談 協議 すり合わせ 持ち帰る 整理 見直す');
   await expect(page.locator('.candidate')).toHaveCount(0);
   await page.getByRole('button', {name:'今日は選ばない'}).click();
-  await expect(page.getByRole('heading', {name:/おしまい/})).toBeVisible();
+  await expect(page.getByRole('heading', {name:'今日のあなたの言葉磨き', exact:true})).toBeVisible();
 });
 
 test('選ぶ操作の補助説明は通常の見出し直下に一度だけ表示する', async ({page}) => {
@@ -220,7 +220,7 @@ for (const index of [0,2,4]) {
     await expect(page.getByRole('button', {name:'今日の一言にする'})).toBeVisible();
     await expect(page.getByRole('button', {name:'今日の一言にする'})).toBeDisabled();
     await page.getByRole('button', {name:'今日は選ばない'}).click();
-    await expect(page.getByRole('heading', {name:/おしまい/})).toBeVisible();
+    await expect(page.getByRole('heading', {name:'今日のあなたの言葉磨き', exact:true})).toBeVisible();
   });
 }
 

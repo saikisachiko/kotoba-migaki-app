@@ -163,3 +163,22 @@ test('選ぶ操作の補助説明は通常の見出し直下に一度だけ表�
   await expect(page.locator('.candidate').first()).toHaveAttribute('aria-pressed','true');
   await expect(page.getByRole('button', {name:'今日の一言にする'})).toBeVisible();
 });
+
+test('候補の3見出しは文章見出しと同じサイズ・太さで、他の文字は維持', async ({page}) => {
+  await answer(page);
+  const typography = locator => locator.evaluate(el => {
+    const style = getComputedStyle(el);
+    return {size:style.fontSize, weight:style.fontWeight};
+  });
+  for (const width of [390,1440]) {
+    await page.setViewportSize({width,height:844});
+    const expected = await typography(page.getByRole('heading', {name:'あなたの言葉で文章にすると'}));
+    expect(expected).toEqual({size:'14px',weight:'600'});
+    for (const label of ['通常の言い換え','少し視点を変えた言い換え','もう少し発想を広げてみる？']) {
+      expect(await typography(page.getByText(label, {exact:true}))).toEqual(expected);
+    }
+    expect((await typography(page.locator('.selection-hint'))).size).toBe('12px');
+    expect((await typography(page.locator('.card-heading strong').first())).size).toBe('19px');
+    expect((await typography(page.locator('.description').first())).size).toBe('13px');
+  }
+});

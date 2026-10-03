@@ -108,3 +108,22 @@ test('入力の前後の空白も置換結果に保持する', async ({page}) =>
   expect(await page.locator('.own .sentence').textContent())
     .toBe('「納期については、もう少し『  検討させてください  』。」');
 });
+
+test('AIコメントは表現カードの下にあり、カードには入力と置換文だけを表示', async ({page}) => {
+  await answer(page, '検討させてください');
+  const comment = 'この言葉を手がかりに、相手に伝わる表現を考えてみましょう。状況に合わせた別の言い方も見てみます。';
+  const own = page.locator('.own');
+  await expect(own.locator('h2')).toHaveText('あなたの表現');
+  await expect(own.locator('.own-word')).toHaveText('検討させてください');
+  await expect(own.locator('h3')).toHaveText('あなたの言葉で文章にすると');
+  await expect(own.locator('.sentence')).toHaveText('「納期については、もう少し『検討させてください』。」');
+  await expect(own).not.toContainText(comment);
+  await expect(own.locator(':scope > *')).toHaveCount(4);
+  const feedback = page.getByRole('complementary', {name:'あなたの表現へのAIコメント'});
+  await expect(feedback.locator('p').last()).toHaveText(comment);
+  expect(await feedback.evaluate(el => el.previousElementSibling.classList.contains('own'))).toBe(true);
+  const cardBox = await own.boundingBox();
+  const feedbackBox = await feedback.boundingBox();
+  expect(feedbackBox.y).toBeGreaterThan(cardBox.y + cardBox.height);
+  expect(await feedback.evaluate(el => parseFloat(getComputedStyle(el).fontSize))).toBeLessThan(15);
+});

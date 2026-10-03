@@ -130,3 +130,20 @@ test('AIコメントは表現カードの下にあり、カードには入力と
   expect(feedbackBox.y - (cardBox.y + cardBox.height)).toBeLessThanOrEqual(24);
   expect(await feedback.evaluate(el => parseFloat(getComputedStyle(el).fontSize))).toBeLessThan(15);
 });
+
+test('検討させてくださいの回答では別の語彙の候補を5つ表示する', async ({page}) => {
+  await answer(page, '検討させてください');
+  await page.getByRole('button', {name:'こんな表現もあります'}).click();
+  await expect(page.locator('.candidate .card-heading strong')).toHaveText(['確認する','精査する','調整する','相談する','持ち帰る']);
+  await expect(page.locator('.own-word')).toHaveText('検討させてください');
+  await expect(page.locator('.own .sentence')).toHaveText('「納期については、もう少し『検討させてください』。」');
+  await page.locator('[data-index="1"]').click();
+  await page.getByRole('button', {name:'今日の一言にする'}).click();
+  await expect(page.locator('.saved')).toContainText('条件を精査させてください');
+});
+test('候補プールの全語彙を入力しても今日は選ばないで完了できる', async ({page}) => {
+  await answer(page, '検討 確認 精査 判断 調整 相談 協議 すり合わせ 持ち帰る 整理 見直す');
+  await expect(page.locator('.candidate')).toHaveCount(0);
+  await page.getByRole('button', {name:'今日は選ばない'}).click();
+  await expect(page.getByRole('heading', {name:/おしまい/})).toBeVisible();
+});

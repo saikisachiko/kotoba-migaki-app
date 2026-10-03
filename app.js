@@ -4,13 +4,7 @@ const problem = {
   original: '「納期については、もう少し『考えさせてください』。」',
   target: '考えさせてください',
 };
-const candidates = [
-  { word: '検討する', description: '内容をよく調べ、判断しようとするときに使われる表現です。', phrase: 'もう少し検討させてください' },
-  { word: '確認する', description: '状況や条件を確かめてから返答したいときに使われる表現です。', phrase: '一度確認させてください' },
-  { word: '調整する', description: '「自分が考える」から「相手や条件との折り合いをつける」方向へ視点を移した表現です。', phrase: '社内で調整させてください' },
-  { word: '相談する', description: '「自分一人で考える」から「関係者と話し合う」方向へ視点を移した表現です。', phrase: '一度社内で相談させてください' },
-  { word: '持ち帰る', description: '「その場で判断する」から「いったん場を離れて検討する」という方向へ視点を広げた表現です。', phrase: 'いったん持ち帰らせてください' },
-];
+let candidates = [];
 let answer = '', selected = null;
 const escape = value => value.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const renderReplacement = input => {
@@ -30,10 +24,14 @@ function start() {
 }
 function card(index) {
   const c = candidates[index];
-  return `<button class="candidate" data-index="${index}" aria-pressed="false"><span class="card-heading"><strong>${c.word}</strong><span class="choice">選ぶ ＞</span></span><span class="description">${c.description}</span>${index >= 2 ? `<span class="example">例：${sentence(c)}</span>` : ''}</button>`;
+  return `<button class="candidate" data-index="${index}" aria-pressed="false"><span class="card-heading"><strong>${c.word}</strong><span class="choice">選ぶ ＞</span></span><span class="description">${c.description}</span>${c.group !== 'normal' ? `<span class="example">例：${sentence(c)}</span>` : ''}</button>`;
+}
+function groupCards(group) {
+  return candidates.map((candidate, index) => candidate.group === group ? card(index) : '').join('');
 }
 function expand() {
-  app.innerHTML = `<p class="step">02 / 表現を広げて、選ぶ</p><h1 tabindex="-1">言葉が広がる</h1><section class="own"><h2>あなたの表現</h2>${answer ? `<p class="own-word">${escape(answer)}</p><h3>あなたの言葉で文章にすると</h3><p class="sentence">${ownSentence()}</p>` : '<p class="quiet">まだ自分の言葉が見つかっていません</p><p>ほかの表現を眺めながら、使ってみたい言葉を探してみましょう。</p>'}</section>${answer ? `<aside class="ai-feedback" aria-label="あなたの表現へのAIコメント"><p>この言葉を手がかりに、相手に伝わる表現を考えてみましょう。状況に合わせた別の言い方も見てみます。</p></aside>` : ''}<p class="sample-note">AIコメント・候補はプロトタイプ用の固定サンプルです。</p><h2 class="instruction">使ってみたい言葉を<br>ひとつ選んでください。</h2><section><h3 class="group-title">通常の言い換え</h3>${card(0)}${card(1)}</section><section><h3 class="group-title">少し視点を変えた言い換え</h3>${card(2)}${card(3)}</section><section class="more"><p>もう少し発想を広げてみる？</p><button class="disclosure" id="more" aria-expanded="false" aria-controls="extra">こんな表現もあります ＞</button><div id="extra" hidden>${card(4)}</div></section><div class="actions"><p id="selection-status" role="status"></p><button class="primary" id="finish" hidden>今日の一言にする →</button><button class="text-button" id="skip">今日は選ばない</button></div>`;
+  candidates = KotobaCandidates.selectCandidates(answer);
+  app.innerHTML = `<p class="step">02 / 表現を広げて、選ぶ</p><h1 tabindex="-1">言葉が広がる</h1><section class="own"><h2>あなたの表現</h2>${answer ? `<p class="own-word">${escape(answer)}</p><h3>あなたの言葉で文章にすると</h3><p class="sentence">${ownSentence()}</p>` : '<p class="quiet">まだ自分の言葉が見つかっていません</p><p>ほかの表現を眺めながら、使ってみたい言葉を探してみましょう。</p>'}</section>${answer ? `<aside class="ai-feedback" aria-label="あなたの表現へのAIコメント"><p>この言葉を手がかりに、相手に伝わる表現を考えてみましょう。状況に合わせた別の言い方も見てみます。</p></aside>` : ''}<p class="sample-note">AIコメント・候補はプロトタイプ用の固定サンプルです。</p><h2 class="instruction">使ってみたい言葉を<br>ひとつ選んでください。</h2><section><h3 class="group-title">通常の言い換え</h3>${groupCards('normal')}</section><section><h3 class="group-title">少し視点を変えた言い換え</h3>${groupCards('perspective')}</section><section class="more"><p>もう少し発想を広げてみる？</p><button class="disclosure" id="more" aria-expanded="false" aria-controls="extra">こんな表現もあります ＞</button><div id="extra" hidden>${groupCards('extra')}</div></section><div class="actions"><p id="selection-status" role="status"></p><button class="primary" id="finish" hidden>今日の一言にする →</button><button class="text-button" id="skip">今日は選ばない</button></div>`;
   app.querySelector('#more').onclick = event => {
     const open = event.currentTarget.getAttribute('aria-expanded') !== 'true';
     event.currentTarget.setAttribute('aria-expanded', String(open));

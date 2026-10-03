@@ -147,3 +147,19 @@ test('候補プールの全語彙を入力しても今日は選ばないで完�
   await page.getByRole('button', {name:'今日は選ばない'}).click();
   await expect(page.getByRole('heading', {name:/おしまい/})).toBeVisible();
 });
+
+test('選ぶ操作の補助説明は通常の見出し直下に一度だけ表示する', async ({page}) => {
+  await answer(page);
+  await expect(page.locator('.instruction')).toHaveCount(0);
+  await expect(page.getByText(/使ってみたい言葉を/)).toHaveCount(0);
+  const hint = page.getByText('気になる言葉があれば「選ぶ」を押してください。', {exact:true});
+  await expect(hint).toHaveCount(1);
+  expect(await hint.evaluate(el => el.tagName)).toBe('P');
+  expect(await hint.evaluate(el => el.previousElementSibling.textContent)).toBe('通常の言い換え');
+  expect(await hint.evaluate(el => el.nextElementSibling.classList.contains('candidate'))).toBe(true);
+  expect(await hint.evaluate(el => parseFloat(getComputedStyle(el).fontSize))).toBeLessThan(15);
+  await expect(page.getByRole('heading', {name:'少し視点を変えた言い換え'}).locator('..').locator('.selection-hint')).toHaveCount(0);
+  await page.locator('.candidate').first().click();
+  await expect(page.locator('.candidate').first()).toHaveAttribute('aria-pressed','true');
+  await expect(page.getByRole('button', {name:'今日の一言にする'})).toBeVisible();
+});

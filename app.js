@@ -29,9 +29,25 @@ function card(index) {
 function groupCards(group) {
   return candidates.map((candidate, index) => candidate.group === group ? card(index) : '').join('');
 }
+// 将来のAI接続時は、この関数を入力とお題に基づくフィードバック取得処理に置き換える。
+// 採点せず、意味・ニュアンス・場面での伝わり方を1〜2文で説明する。
+function feedbackForExpression(input, context = problem) {
+  const samples = [
+    ['検討', 'すぐに返答せず、内容を考える時間がほしいことを丁寧に伝える'],
+    ['確認', '状況や条件を確かめてから返答したいことを伝える'],
+    ['調整', '相手の希望と社内の条件との折り合いをつけたいことを伝える'],
+    ['相談', '自分だけで決めず、関係者と話し合ってから返答したいことを伝える'],
+    ['持ち帰', 'その場では決めず、いったん社内で話し合う時間を取りたいことを伝える'],
+    ['考え', '返答の前に自分で考える時間がほしいことを伝える'],
+  ];
+  const normalized = input.normalize('NFKC').replace(/\s/g, '');
+  const sample = samples.find(([stem]) => normalized.includes(stem));
+  if (sample) return `『${input}』は、${sample[1]}表現です。`;
+  return `『${input}』を「${context.target}」の代わりに使うと、返答のニュアンスが変わります。前後の言葉とのつながりでも、相手への伝わり方が変わる表現です。`;
+}
 function expand() {
   candidates = KotobaCandidates.selectCandidates(answer);
-  app.innerHTML = `<p class="step">02 / 表現を広げて、選ぶ</p><h1 tabindex="-1">言葉が広がる</h1><section class="own"><h2>あなたの表現</h2>${answer ? `<p class="own-word">${escape(answer)}</p><h3>あなたの言葉で文章にすると</h3><p class="sentence">${ownSentence()}</p>` : '<p class="quiet">まだ自分の言葉が見つかっていません</p><p>ほかの表現を眺めながら、使ってみたい言葉を探してみましょう。</p>'}</section>${answer ? `<aside class="ai-feedback" aria-label="あなたの表現へのAIコメント"><p>この言葉を手がかりに、相手に伝わる表現を考えてみましょう。状況に合わせた別の言い方も見てみます。</p></aside>` : ''}<p class="sample-note">AIコメント・候補はプロトタイプ用の固定サンプルです。</p><section><h3 class="group-title">通常の言い換え</h3><p class="selection-hint">覚えたい言葉があれば「選ぶ」を押してください。（今日の一言に保存されます）</p>${groupCards('normal')}</section><section><h3 class="group-title">少し視点を変えた言い換え</h3>${groupCards('perspective')}</section><section class="more"><p>もう少し発想を広げてみる？</p><button class="disclosure" id="more" aria-expanded="false" aria-controls="extra">こんな表現もあります ＞</button><div id="extra" hidden>${groupCards('extra')}</div></section><div class="actions"><p id="selection-status" role="status"></p><button class="primary" id="finish" disabled>今日の一言にする →</button><button class="text-button" id="skip">今日は選ばない</button></div>`;
+  app.innerHTML = `<p class="step">02 / 表現を広げて、選ぶ</p><h1 tabindex="-1">言葉が広がる</h1><section class="own"><h2>あなたの表現</h2>${answer ? `<p class="own-word">${escape(answer)}</p><h3>あなたの言葉で文章にすると</h3><p class="sentence">${ownSentence()}</p>` : '<p class="quiet">まだ自分の言葉が見つかっていません</p><p>ほかの表現を眺めながら、使ってみたい言葉を探してみましょう。</p>'}</section>${answer ? `<aside class="ai-feedback" aria-label="あなたの表現へのAIコメント"><p>${escape(feedbackForExpression(answer, problem))}</p></aside>` : ''}<p class="sample-note">AIコメント・候補はプロトタイプ用の固定サンプルです。</p><section><h3 class="group-title">通常の言い換え</h3><p class="selection-hint">覚えたい言葉があれば「選ぶ」を押してください。（今日の一言に保存されます）</p>${groupCards('normal')}</section><section><h3 class="group-title">少し視点を変えた言い換え</h3>${groupCards('perspective')}</section><section class="more"><p>もう少し発想を広げてみる？</p><button class="disclosure" id="more" aria-expanded="false" aria-controls="extra">こんな表現もあります ＞</button><div id="extra" hidden>${groupCards('extra')}</div></section><div class="actions"><p id="selection-status" role="status"></p><button class="primary" id="finish" disabled>今日の一言にする →</button><button class="text-button" id="skip">今日は選ばない</button></div>`;
   app.querySelector('#more').onclick = event => {
     const open = event.currentTarget.getAttribute('aria-expanded') !== 'true';
     event.currentTarget.setAttribute('aria-expanded', String(open));
@@ -48,7 +64,7 @@ function expand() {
   app.querySelector('#skip').onclick = () => { selected = null; move(done); };
 }
 function done() {
-  app.innerHTML = `<p class="step">03 / 今日のページを閉じる</p><h1 tabindex="-1">今日のあなたの言葉磨き</h1><section class="own"><h2>✏️ 自分の言葉</h2><p class="sentence">${answer ? ownSentence() : 'まだ自分の言葉が見つかっていません'}</p></section>${selected !== null ? `<section class="saved"><h2>🌱 今日の一言</h2><p class="sentence">${sentence(candidates[selected])}</p><p>ことば帳に追加しました。</p><p class="hint">プロトタイプの仮表示です。データは保存されません。</p><button class="secondary" id="notebook">ことば帳を見る</button><p id="notebook-message" role="status"></p></section>` : '<p class="quiet">今日は、表現を眺めるところまで。</p>'}<p class="farewell">お疲れさまでした。また明日！</p><button class="text-button" id="restart">もう一度試す</button>`;
+  app.innerHTML = `<p class="step">03 / 今日のページを閉じる</p><h1 tabindex="-1">今日のあなたの言葉磨き</h1><section class="own"><h2>✏️ 自分の言葉</h2><p class="sentence">${answer ? ownSentence() : 'まだ自分の言葉が見つかっていません'}</p></section>${selected !== null ? `<section class="saved"><h2>🌱 今日の一言</h2><p class="sentence">${sentence(candidates[selected])}</p></section><div class="notebook-summary"><p>ことば帳に追加しました。</p><p class="hint">プロトタイプの仮表示です。データは保存されません。</p><button class="secondary" id="notebook">ことば帳を見る</button><p id="notebook-message" role="status"></p></div>` : '<p class="quiet">今日は、表現を眺めるところまで。</p>'}<p class="farewell">お疲れさまでした。また明日！</p><button class="text-button" id="restart">もう一度試す</button>`;
   app.querySelector('#notebook')?.addEventListener('click', () => { app.querySelector('#notebook-message').textContent = 'ことば帳は次の開発段階で実装します'; });
   app.querySelector('#restart').onclick = () => { answer = ''; move(start); };
 }

@@ -111,7 +111,7 @@ test('入力の前後の空白も置換結果に保持する', async ({page}) =>
 
 test('AIコメントは表現カードの下にあり、カードには入力と置換文だけを表示', async ({page}) => {
   await answer(page, '検討させてください');
-  const comment = 'この言葉を手がかりに、相手に伝わる表現を考えてみましょう。状況に合わせた別の言い方も見てみます。';
+  const comment = '『検討させてください』は、すぐに返答せず、内容を考える時間がほしいことを丁寧に伝える表現です。';
   const own = page.locator('.own');
   await expect(own.locator('h2')).toHaveText('あなたの表現');
   await expect(own.locator('.own-word')).toHaveText('検討させてください');
@@ -258,3 +258,32 @@ for (const width of [320,390,1440]) {
     expect(Math.abs(box.x - (width-box.width)/2)).toBeLessThan(1);
   });
 }
+
+test('入力に対応する短いフィードバックを安全に表示する', async ({page}) => {
+  for (const [input, part] of [['検討させてください','内容を考える時間'],['相談させてください','関係者と話し合って'],['確認したいです','状況や条件を確かめて'],['<img src=x onerror=alert(1)>','返答のニュアンスが変わります']]) {
+    await answer(page,input);
+    const feedback = page.locator('.ai-feedback');
+    await expect(feedback).toContainText(`『${input}』`);
+    await expect(feedback).toContainText(part);
+    await expect(feedback.locator('h1,h2,h3,img')).toHaveCount(0);
+    await expect(feedback).not.toContainText('この言葉を手がかりに');
+  }
+});
+test('仮保存メッセージとことば帳ボタンは両カードの下に表示', async ({page}) => {
+  await answer(page, '検討させてください');
+  await page.locator('[data-index="0"]').click();
+  await page.getByRole('button', {name:'今日の一言にする'}).click();
+  const summary = page.locator('.notebook-summary');
+  await expect(page.locator('.own,.saved')).not.toContainText(['ことば帳に追加しました。','ことば帳に追加しました。']);
+  await expect(summary).toContainText('ことば帳に追加しました。');
+  expect(await summary.evaluate(el => el.previousElementSibling.classList.contains('saved') && el.previousElementSibling.previousElementSibling.classList.contains('own'))).toBe(true);
+  await expect(summary.getByRole('button', {name:'ことば帳を見る'})).toBeVisible();
+  await expect(summary).toContainText('プロトタイプの仮表示です。データは保存されません。');
+  await summary.getByRole('button', {name:'ことば帳を見る'}).click();
+  await expect(page.locator('#notebook-message')).toHaveText('ことば帳は次の開発段階で実装します');
+  await page.getByRole('button', {name:'もう一度試す'}).click();
+  await page.getByRole('button', {name:'ギブアップ'}).click();
+  await expect(page.locator('.ai-feedback')).toHaveCount(0);
+  await page.getByRole('button', {name:'今日は選ばない'}).click();
+  await expect(page.locator('.notebook-summary')).toHaveCount(0);
+});

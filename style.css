@@ -11,3 +11,6 @@
 
 .own>:last-child,.saved>:last-child{margin-bottom:0}
 #selection-status:empty,#notebook-message:empty{margin:0}
+
+.notebook-summary{margin:24px 0}
+.notebook-summary>p:first-child{margin-top:0}

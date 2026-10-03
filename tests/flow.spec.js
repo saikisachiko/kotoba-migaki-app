@@ -91,3 +91,20 @@ test('JavaScriptの例外なし', async ({page}) => {
   await page.getByRole('button', {name:'今日の一言にする'}).click();
   expect(errors).toEqual([]);
 });
+
+test('元のお題の対象だけを置換し、結果と完了画面に表示する', async ({page}) => {
+  await page.goto('/');
+  await expect(page.locator('blockquote')).toHaveText('「納期については、もう少し『考えさせてください』。」');
+  await page.locator('input').fill('検討させてください');
+  await page.getByRole('button', {name:'この言葉にする'}).click();
+  const expected = '「納期については、もう少し『検討させてください』。」';
+  await expect(page.locator('.own .sentence')).toHaveText(expected);
+  await expect(page.locator('.own .sentence strong')).toHaveText('検討させてください');
+  await page.getByRole('button', {name:'今日は選ばない'}).click();
+  await expect(page.locator('.own .sentence')).toHaveText(expected);
+});
+test('入力の前後の空白も置換結果に保持する', async ({page}) => {
+  await answer(page, '  検討させてください  ');
+  expect(await page.locator('.own .sentence').textContent())
+    .toBe('「納期については、もう少し『  検討させてください  』。」');
+});

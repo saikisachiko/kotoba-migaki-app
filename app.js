@@ -1,4 +1,9 @@
 const app = document.querySelector('#app');
+const problem = {
+  context: '取引先から、当初の予定より早い納品を求められました。',
+  original: '「納期については、もう少し『考えさせてください』。」',
+  target: '考えさせてください',
+};
 const candidates = [
   { word: '検討する', description: '内容をよく調べ、判断しようとするときに使われる表現です。', phrase: 'もう少し検討させてください' },
   { word: '確認する', description: '状況や条件を確かめてから返答したいときに使われる表現です。', phrase: '一度確認させてください' },
@@ -8,15 +13,19 @@ const candidates = [
 ];
 let answer = '', selected = null;
 const escape = value => value.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const ownSentence = () => `納期については、「<strong>${escape(answer)}</strong>」とお伝えしたいです。`;
+const renderReplacement = input => {
+  const { before, after } = KotobaText.splitTargetPhrase(problem.original, problem.target);
+  return `${escape(before)}<strong>${escape(input)}</strong>${escape(after)}`;
+};
+const ownSentence = () => renderReplacement(answer);
 const sentence = candidate => `納期については、<strong>${candidate.phrase}</strong>。`;
 function move(render) { render(); window.scrollTo(0, 0); app.querySelector('h1').focus(); }
 function start() {
   selected = null;
-  app.innerHTML = `<p class="step">01 / 自分の言葉を出す</p><h1 tabindex="-1">今日の言葉磨き</h1><section class="prompt"><p>取引先から、当初の予定より<br>早い納品を求められました。</p><blockquote>「納期については、もう少し<br>『<strong>考えさせてください</strong>』。」</blockquote></section><form id="answer-form"><label for="answer">「考えさせてください」を<br>別の表現にしてみましょう。</label><p class="hint" id="input-hint">1語、または短いフレーズで大丈夫です。</p><input id="answer" name="answer" type="text" placeholder="あなたなら、どんな言葉にしますか" aria-describedby="input-hint" autocomplete="off"><button class="primary" id="submit" disabled>この言葉にする <span aria-hidden="true">→</span></button></form><div class="giveup"><p>思いつかないときは</p><button class="text-button" id="giveup">ギブアップ</button></div>`;
+  app.innerHTML = `<p class="step">01 / 自分の言葉を出す</p><h1 tabindex="-1">今日の言葉磨き</h1><section class="prompt"><p>${escape(problem.context)}</p><blockquote>${renderReplacement(problem.target)}</blockquote></section><form id="answer-form"><label for="answer">「${escape(problem.target)}」を<br>別の表現にしてみましょう。</label><p class="hint" id="input-hint">1語、または短いフレーズで大丈夫です。</p><input id="answer" name="answer" type="text" placeholder="あなたなら、どんな言葉にしますか" aria-describedby="input-hint" autocomplete="off"><button class="primary" id="submit" disabled>この言葉にする <span aria-hidden="true">→</span></button></form><div class="giveup"><p>思いつかないときは</p><button class="text-button" id="giveup">ギブアップ</button></div>`;
   const input = app.querySelector('input');
   input.addEventListener('input', () => { app.querySelector('#submit').disabled = !input.value.trim(); });
-  app.querySelector('form').addEventListener('submit', event => { event.preventDefault(); if (!input.value.trim()) return; answer = input.value.trim(); move(expand); });
+  app.querySelector('form').addEventListener('submit', event => { event.preventDefault(); if (!input.value.trim()) return; answer = input.value; move(expand); });
   app.querySelector('#giveup').onclick = () => { answer = ''; move(expand); };
 }
 function card(index) {

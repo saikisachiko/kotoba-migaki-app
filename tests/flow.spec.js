@@ -182,3 +182,44 @@ test('候補の3見出しは文章見出しと同じサイズ・太さで、他�
     expect((await typography(page.locator('.description').first())).size).toBe('13px');
   }
 });
+
+test('今日の一言ボタンは初期表示で無効、クリックとタップでも進まない', async ({page, browser}) => {
+  const touchContext = await browser.newContext({hasTouch:true,viewport:{width:390,height:844},baseURL:'http://127.0.0.1:3000'});
+  const touchPage = await touchContext.newPage();
+  for (const current of [page,touchPage]) {
+    await answer(current);
+    const finish = current.getByRole('button', {name:'今日の一言にする'});
+    await expect(finish).toBeVisible();
+    await expect(finish).toBeDisabled();
+    expect(await finish.evaluate(el=>getComputedStyle(el).backgroundColor)).toBe('rgb(220, 227, 218)');
+    if (current === page) await finish.click({force:true});
+    else await finish.tap({force:true});
+    await expect(current.getByRole('heading', {name:'言葉が広がる'})).toBeVisible();
+    await expect(current.getByRole('button', {name:'今日は選ばない'})).toBeEnabled();
+  }
+  await touchContext.close();
+});
+for (const index of [0,2,4]) {
+  test(`カテゴリー${index / 2 + 1}の選択で有効化し、変更した候補で完了`, async ({page}) => {
+    await answer(page);
+    const finish = page.getByRole('button', {name:'今日の一言にする'});
+    if (index === 4) await page.getByRole('button', {name:'こんな表現もあります'}).click();
+    await page.locator(`[data-index="${index}"]`).click();
+    await expect(finish).toBeEnabled();
+    expect(await finish.evaluate(el=>getComputedStyle(el).backgroundColor)).toBe('rgb(85, 126, 103)');
+    const word = await page.locator(`[data-index="${index}"] .card-heading strong`).textContent();
+    await expect(page.locator('#selection-status')).toHaveText(`「${word}」を選びました。`);
+    await page.locator('[data-index="3"]').click();
+    await expect(page.locator('#selection-status')).toHaveText('「相談する」を選びました。');
+    await expect(finish).toBeEnabled();
+    await expect(page.getByRole('button', {name:'今日は選ばない'})).toBeEnabled();
+    await finish.click();
+    await expect(page.locator('.saved')).toContainText('一度社内で相談させてください');
+    await page.getByRole('button', {name:'もう一度試す'}).click();
+    await page.getByRole('button', {name:'ギブアップ'}).click();
+    await expect(page.getByRole('button', {name:'今日の一言にする'})).toBeVisible();
+    await expect(page.getByRole('button', {name:'今日の一言にする'})).toBeDisabled();
+    await page.getByRole('button', {name:'今日は選ばない'}).click();
+    await expect(page.getByRole('heading', {name:/おしまい/})).toBeVisible();
+  });
+}

@@ -31,7 +31,7 @@ function groupCards(group) {
 }
 function expand() {
   candidates = KotobaCandidates.selectCandidates(answer);
-  app.innerHTML = `<p class="step">02 / 表現を広げて、選ぶ</p><h1 tabindex="-1">言葉が広がる</h1><section class="own"><h2>あなたの表現</h2>${answer ? `<p class="own-word">${escape(answer)}</p><h3>あなたの言葉で文章にすると</h3><p class="sentence">${ownSentence()}</p>` : '<p class="quiet">まだ自分の言葉が見つかっていません</p><p>ほかの表現を眺めながら、使ってみたい言葉を探してみましょう。</p>'}</section>${answer ? `<aside class="ai-feedback" aria-label="あなたの表現へのAIコメント"><p>この言葉を手がかりに、相手に伝わる表現を考えてみましょう。状況に合わせた別の言い方も見てみます。</p></aside>` : ''}<p class="sample-note">AIコメント・候補はプロトタイプ用の固定サンプルです。</p><section><h3 class="group-title">通常の言い換え</h3><p class="selection-hint">覚えたい言葉があれば「選ぶ」を押してください。（今日の一言に保存されます）</p>${groupCards('normal')}</section><section><h3 class="group-title">少し視点を変えた言い換え</h3>${groupCards('perspective')}</section><section class="more"><p>もう少し発想を広げてみる？</p><button class="disclosure" id="more" aria-expanded="false" aria-controls="extra">こんな表現もあります ＞</button><div id="extra" hidden>${groupCards('extra')}</div></section><div class="actions"><p id="selection-status" role="status"></p><button class="primary" id="finish" hidden>今日の一言にする →</button><button class="text-button" id="skip">今日は選ばない</button></div>`;
+  app.innerHTML = `<p class="step">02 / 表現を広げて、選ぶ</p><h1 tabindex="-1">言葉が広がる</h1><section class="own"><h2>あなたの表現</h2>${answer ? `<p class="own-word">${escape(answer)}</p><h3>あなたの言葉で文章にすると</h3><p class="sentence">${ownSentence()}</p>` : '<p class="quiet">まだ自分の言葉が見つかっていません</p><p>ほかの表現を眺めながら、使ってみたい言葉を探してみましょう。</p>'}</section>${answer ? `<aside class="ai-feedback" aria-label="あなたの表現へのAIコメント"><p>この言葉を手がかりに、相手に伝わる表現を考えてみましょう。状況に合わせた別の言い方も見てみます。</p></aside>` : ''}<p class="sample-note">AIコメント・候補はプロトタイプ用の固定サンプルです。</p><section><h3 class="group-title">通常の言い換え</h3><p class="selection-hint">覚えたい言葉があれば「選ぶ」を押してください。（今日の一言に保存されます）</p>${groupCards('normal')}</section><section><h3 class="group-title">少し視点を変えた言い換え</h3>${groupCards('perspective')}</section><section class="more"><p>もう少し発想を広げてみる？</p><button class="disclosure" id="more" aria-expanded="false" aria-controls="extra">こんな表現もあります ＞</button><div id="extra" hidden>${groupCards('extra')}</div></section><div class="actions"><p id="selection-status" role="status"></p><button class="primary" id="finish" disabled>今日の一言にする →</button><button class="text-button" id="skip">今日は選ばない</button></div>`;
   app.querySelector('#more').onclick = event => {
     const open = event.currentTarget.getAttribute('aria-expanded') !== 'true';
     event.currentTarget.setAttribute('aria-expanded', String(open));
@@ -42,7 +42,7 @@ function expand() {
     selected = Number(button.dataset.index);
     app.querySelectorAll('.candidate').forEach(b => { const active = Number(b.dataset.index) === selected; b.setAttribute('aria-pressed', String(active)); b.querySelector('.choice').textContent = active ? '✓ 選択中' : '選ぶ ＞'; });
     app.querySelector('#selection-status').textContent = `「${candidates[selected].word}」を選びました。`;
-    app.querySelector('#finish').hidden = false;
+    app.querySelector('#finish').disabled = false;
   });
   app.querySelector('#finish').onclick = () => move(done);
   app.querySelector('#skip').onclick = () => { selected = null; move(done); };

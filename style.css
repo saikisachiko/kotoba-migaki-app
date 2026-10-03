@@ -3,5 +3,4 @@
 .sentence{white-space:pre-wrap}
 
 .ai-feedback{margin:18px 4px 20px;color:#68746a;font-size:13px;line-height:1.9}
-.ai-feedback p{margin:6px 0}
-.ai-feedback .feedback-label{font-size:11px;color:#657d6c;letter-spacing:.03em}
+.ai-feedback p{margin:0}

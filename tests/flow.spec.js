@@ -120,10 +120,13 @@ test('AIコメントは表現カードの下にあり、カードには入力と
   await expect(own).not.toContainText(comment);
   await expect(own.locator(':scope > *')).toHaveCount(4);
   const feedback = page.getByRole('complementary', {name:'あなたの表現へのAIコメント'});
-  await expect(feedback.locator('p').last()).toHaveText(comment);
+  await expect(feedback.locator('p')).toHaveCount(1);
+  await expect(feedback.locator('p')).toHaveText(comment);
+  await expect(page.getByText('あなたの表現へのAIコメント', {exact:true})).toHaveCount(0);
   expect(await feedback.evaluate(el => el.previousElementSibling.classList.contains('own'))).toBe(true);
   const cardBox = await own.boundingBox();
   const feedbackBox = await feedback.boundingBox();
   expect(feedbackBox.y).toBeGreaterThan(cardBox.y + cardBox.height);
+  expect(feedbackBox.y - (cardBox.y + cardBox.height)).toBeLessThanOrEqual(24);
   expect(await feedback.evaluate(el => parseFloat(getComputedStyle(el).fontSize))).toBeLessThan(15);
 });
